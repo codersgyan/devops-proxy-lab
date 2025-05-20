@@ -1,66 +1,77 @@
 services:
-  blog-db:
-    image: mysql
-    deploy:
-      replicas: 1
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        parallelism: 1
-        order: start-first
-    healthcheck:
-      test:
-        - CMD
-        - mysqladmin
-        - ping
-        - '-h'
-        - localhost
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-    volumes:
-      - blog-db-vol:/var/lib/mysql
-    ports:
-      - '3306:3306'
-    networks:
-      - blog-app-net
-  blog-server:
-    image: codersgyan/blog-app:build-01cdac8bc8464ab0375000bd5e8637e0d81f771d
-    deploy:
-      replicas: 2
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        parallelism: 1
-        order: start-first
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - '--no-verbose'
-        - '--tries=1'
-        - '--spider'
-        - http://localhost:3000/health
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    ports:
-      - '3001:3000'
-    environment:
-      - DB_HOST=blog-db
-      - DB_USER=root
-      - DB_PASSWORD=root
-      - DB_NAME=blogdb
-      - NODE_HOST="{{.Node.Hostname}}"
-    networks:
-      - blog-app-net
+    blog-db:
+        image: mysql
+        deploy:
+            replicas: 1
+            update_config:
+                order: start-first
+                failure_action: rollback
+                delay: 10s
+            rollback_config:
+                parallelism: 1
+                order: start-first
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-h'
+                - localhost
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        environment:
+            - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+        volumes:
+            - blog-db-vol:/var/lib/mysql
+        ports:
+            - '3306:3306'
+        networks:
+            - blog-app-net
+        secrets:
+            - db_password
+    blog-server:
+        image: codersgyan/blog-app:build-4
+        deploy:
+            replicas: 2
+            update_config:
+                order: start-first
+                failure_action: rollback
+                delay: 10s
+            rollback_config:
+                parallelism: 1
+                order: start-first
+        healthcheck:
+            test:
+                - CMD
+                - wget
+                - '--no-verbose'
+                - '--tries=1'
+                - '--spider'
+                - http://localhost:3000/health
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        ports:
+            - '3001:3000'
+        environment:
+            - DB_HOST=blog-db
+            - DB_USER_FILE=/run/secrets/db_username
+            - DB_PASSWORD_FILE=/run/secrets/db_password
+            - DB_NAME=blogdb
+            - NODE_HOST="{{.Node.Hostname}}"
+        networks:
+            - blog-app-net
+        secrets:
+            - db_username
+            - db_password
 volumes:
-  blog-db-vol: null
+    blog-db-vol: null
 networks:
-  blog-app-net: null
+    blog-app-net: null
+
+secrets:
+    db_password:
+        external: true
+    db_username:
+        external: true
