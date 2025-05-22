@@ -31,7 +31,7 @@ services:
     secrets:
       - db_password
   blog-server:
-    image: codersgyan/blog-app:build-9b1472ca6a923049f99ab28ba739fa03bd3e5953
+    image: codersgyan/blog-app:build-1bba589b4174a61ec1f5d30f4b81d32670049d70
     deploy:
       replicas: 2
       update_config:
@@ -88,9 +88,9 @@ services:
       - source: Caddyfile
         target: /etc/caddy/Caddyfile
 volumes:
-    blog-db-vol: null
-    caddy_data: null
-    caddy_config: null
+  blog-db-vol: null
+  caddy_data: null
+  caddy_config: null
 networks:
   blog-app-net: null
 secrets:
