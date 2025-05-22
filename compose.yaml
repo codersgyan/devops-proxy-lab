@@ -90,6 +90,8 @@ services:
               target: /etc/caddy/Caddyfile
 volumes:
     blog-db-vol: null
+    caddy_data: null
+    caddy_config: null
 networks:
     blog-app-net: null
 secrets:
