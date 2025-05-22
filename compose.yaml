@@ -33,6 +33,27 @@ services:
             - blog-app-net
         secrets:
             - db_password
+
+    db-backup:
+        image: fradelg/mysql-cron-backup:latest
+        environment:
+            MYSQL_HOST: blog-db
+            MYSQL_USER_FILE: /run/secrets/db_username
+            MYSQL_PASS_FILE: /run/secrets/db_password
+            CRON_SCHEDULE: '* * * * *' # Every minute
+            COMPRESSION: 'gzip'
+            # extra mysqldump flags, e.g. "--single-transaction --order-by-primary"
+        volumes:
+            - mysql_backups:/backup # named volume or NFS/S3Fuse mount
+        deploy:
+            restart_policy:
+                condition: any
+            placement:
+                constraints:
+                    - node.labels.dedicated == true
+        secrets:
+            - db_password
+            - db_username
     blog-server:
         image: codersgyan/blog-app:build-ee7fd49e399ed99184d1b293c60a5db24b184b14
         deploy:
