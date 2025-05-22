@@ -31,7 +31,7 @@ services:
     secrets:
       - db_password
   blog-server:
-    image: codersgyan/blog-app:build-c025950f1ce68aec6f8a1f230d7a993e106a0efa
+    image: codersgyan/blog-app:build-7a1608109bd5fc18fd83ef7a4660360a50cd1462
     deploy:
       replicas: 2
       update_config:
