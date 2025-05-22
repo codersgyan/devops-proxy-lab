@@ -33,14 +33,21 @@ scrape_configs:
       dockerswarm_sd_configs:
           - host: unix:///var/run/docker.sock
             role: tasks
-            port: 9100 # <-- forces :9100
       relabel_configs:
-          # keep only tasks whose service has label prometheus-job=node
+          # keep only node-exporter tasks
           - source_labels: [__meta_dockerswarm_service_label_prometheus_job]
             regex: node
             action: keep
-          - source_labels: [__meta_dockerswarm_task_address]
-            target_label: instance
+          # propagate swarm meta to scraped metrics
+          - source_labels: [__meta_dockerswarm_node_id]
+            target_label: node_id
+          - source_labels: [__meta_dockerswarm_node_hostname]
+            target_label: node_name
+          # use the container’s published port (9100)
+          - source_labels: [__address__]
+            regex: (.+):\d+
+            target_label: __address__
+            replacement: ${1}:9100
 
     # ───────────────────────────────────────────
     # 4. cAdvisor – one per node, port 8080
