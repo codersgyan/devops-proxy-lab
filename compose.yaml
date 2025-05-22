@@ -1,162 +1,173 @@
 services:
-  blog-db:
-    image: mysql
-    deploy:
-      replicas: 1
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        parallelism: 1
-        order: start-first
-    healthcheck:
-      test:
-        - CMD
-        - mysqladmin
-        - ping
-        - '-h'
-        - localhost
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
-    volumes:
-      - blog-db-vol:/var/lib/mysql
-    ports:
-      - '3306:3306'
-    networks:
-      - blog-app-net
-    secrets:
-      - db_password
-  blog-server:
-    image: codersgyan/blog-app:build-99f7e583f35cfceb0bccd236ff08b1b4fd67cd5a
-    deploy:
-      replicas: 2
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        parallelism: 1
-        order: start-first
-    healthcheck:
-      test:
-        - CMD
-        - wget
-        - '--no-verbose'
-        - '--tries=1'
-        - '--spider'
-        - http://localhost:3000/health
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    ports:
-      - '3001:3000'
-    environment:
-      - DB_HOST=blog-db
-      - DB_USER_FILE=/run/secrets/db_username
-      - DB_PASSWORD_FILE=/run/secrets/db_password
-      - DB_NAME=blogdb
-      - NODE_HOST="{{.Node.Hostname}}"
-    networks:
-      - blog-app-net
-    secrets:
-      - db_username
-      - db_password
-  caddy:
-    image: caddy:2-alpine
-    deploy:
-      replicas: 1
-      update_config:
-        order: start-first
-        failure_action: rollback
-        delay: 10s
-      rollback_config:
-        parallelism: 1
-        order: start-first
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - blog-app-net
-    configs:
-      - source: Caddyfile
-        target: /etc/caddy/Caddyfile
-  prometheus:
-    image: prom/prometheus:v2.52.0
-    user: root
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
-    volumes:
-      - prometheus_data:/prometheus
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    configs:
-      - source: prometheus.yml
-        target: /etc/prometheus/prometheus.yml
-    networks:
-      - monitoring
-    ports:
-      - '9090:9090'
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      labels:
-        prometheus-job: prometheus
-  node-exporter:
-    image: prom/node-exporter:v1.8.0
-    networks:
-      - monitoring
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-    deploy:
-      mode: global
-      labels:
-        prometheus-job: node
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
-    networks:
-      - monitoring
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /:/rootfs:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    command:
-      - '--docker_only=true'
-    deploy:
-      mode: global
-      labels:
-        prometheus-job: cadvisor
+    blog-db:
+        image: mysql
+        deploy:
+            replicas: 1
+            update_config:
+                order: start-first
+                failure_action: rollback
+                delay: 10s
+            rollback_config:
+                parallelism: 1
+                order: start-first
+        healthcheck:
+            test:
+                - CMD
+                - mysqladmin
+                - ping
+                - '-h'
+                - localhost
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        environment:
+            - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+        volumes:
+            - blog-db-vol:/var/lib/mysql
+        ports:
+            - '3306:3306'
+        networks:
+            - blog-app-net
+        secrets:
+            - db_password
+    blog-server:
+        image: codersgyan/blog-app:build-d2b55634a6d631f9c364825487b0d5e2aa8565dc
+        deploy:
+            replicas: 2
+            update_config:
+                order: start-first
+                failure_action: rollback
+                delay: 10s
+            rollback_config:
+                parallelism: 1
+                order: start-first
+        healthcheck:
+            test:
+                - CMD
+                - wget
+                - '--no-verbose'
+                - '--tries=1'
+                - '--spider'
+                - http://localhost:3000/health
+            interval: 10s
+            timeout: 5s
+            retries: 3
+        ports:
+            - '3001:3000'
+        environment:
+            - DB_HOST=blog-db
+            - DB_USER_FILE=/run/secrets/db_username
+            - DB_PASSWORD_FILE=/run/secrets/db_password
+            - DB_NAME=blogdb
+            - NODE_HOST="{{.Node.Hostname}}"
+        networks:
+            - blog-app-net
+        secrets:
+            - db_username
+            - db_password
+    caddy:
+        image: caddy:2-alpine
+        deploy:
+            replicas: 1
+            update_config:
+                order: start-first
+                failure_action: rollback
+                delay: 10s
+            rollback_config:
+                parallelism: 1
+                order: start-first
+        ports:
+            - '80:80'
+            - '443:443'
+        volumes:
+            - caddy_data:/data
+            - caddy_config:/config
+        networks:
+            - blog-app-net
+        configs:
+            - source: Caddyfile
+              target: /etc/caddy/Caddyfile
+    prometheus:
+        image: prom/prometheus:v2.52.0
+        user: root
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus'
+            - '--storage.tsdb.retention.time=30d'
+            - '--web.enable-lifecycle'
+        volumes:
+            - prometheus_data:/prometheus
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        configs:
+            - source: prometheus.yml
+              target: /etc/prometheus/prometheus.yml
+        networks:
+            - monitoring
+        ports:
+            - '9090:9090'
+        deploy:
+            replicas: 1
+            placement:
+                constraints:
+                    - node.role == manager
+            labels:
+                prometheus-job: prometheus
+    node-exporter:
+        image: prom/node-exporter:v1.8.0
+        networks:
+            - monitoring
+        volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+        command:
+            - '--path.procfs=/host/proc'
+            - '--path.sysfs=/host/sys'
+            - '--path.rootfs=/rootfs'
+        deploy:
+            mode: global
+            labels:
+                prometheus-job: node
+        ports:
+            - target: 9100
+              published: 9100
+              protocol: tcp
+              mode: host # recommended for one-per-node exporters
+    cadvisor:
+        image: gcr.io/cadvisor/cadvisor:v0.49.1
+        networks:
+            - monitoring
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /:/rootfs:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+        command:
+            - '--docker_only=true'
+        deploy:
+            mode: global
+            labels:
+                prometheus-job: cadvisor
+        ports:
+            - target: 8080
+              published: 8080
+              protocol: tcp
+              mode: host
+
 volumes:
-  blog-db-vol: null
-  caddy_data: null
-  caddy_config: null
-  prometheus_data: null
+    blog-db-vol: null
+    caddy_data: null
+    caddy_config: null
+    prometheus_data: null
 networks:
-  blog-app-net: null
-  monitoring: null
+    blog-app-net: null
+    monitoring: null
 secrets:
-  db_password:
-    external: true
-  db_username:
-    external: true
+    db_password:
+        external: true
+    db_username:
+        external: true
 configs:
-  Caddyfile:
-    file: ./Caddyfile
-  prometheus.yml:
-    file: ./prometheus.yml
+    Caddyfile:
+        file: ./Caddyfile
+    prometheus.yml:
+        file: ./prometheus.yml
