@@ -56,7 +56,7 @@ services:
     networks:
       - blog-app-net
   blog-server:
-    image: codersgyan/blog-app:build-4a1933ad546a51b923267e6e3a767576fc05b627
+    image: codersgyan/blog-app:build-a3d9dd4eef9c73d4a754d8e54cb79e7983e30d4e
     deploy:
       replicas: 2
       update_config:
