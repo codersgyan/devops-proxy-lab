@@ -184,23 +184,23 @@ services:
               protocol: tcp
               mode: host
 volumes:
-    blog-db-vol: null
-    caddy_data: null
-    caddy_config: null
-    prometheus_data: null
-    mysql_backups: null
+  blog-db-vol: null
+  caddy_data: null
+  caddy_config: null
+  prometheus_data: null
+  mysql_backups: null
 networks:
-    blog-app-net: null
-    monitoring: null
+  blog-app-net: null
+  monitoring: null
 secrets:
-    db_password:
-        external: true
-    db_username:
-        external: true
+  db_password:
+    external: true
+  db_username:
+    external: true
 configs:
-    Caddyfile:
-        file: ./Caddyfile
-    prometheus.yml:
-        file: ./prometheus.yml
-    node_exporter_entrypoint:
-        file: ./node_exporter_entrypoint
+  Caddyfile:
+    file: ./Caddyfile
+  prometheus.yml:
+    file: ./prometheus.yml
+  node_exporter_entrypoint:
+    file: ./node_exporter_entrypoint
