@@ -39,8 +39,9 @@ services:
             MYSQL_HOST: blog-db
             MYSQL_USER_FILE: /run/secrets/db_username
             MYSQL_PASS_FILE: /run/secrets/db_password
-            CRON_SCHEDULE: '* * * * *'
-            COMPRESSION: gzip
+            CRON_TIME: '* * * * *' # every minute while testing
+            INIT_BACKUP: 'true' # run one dump immediately on container start
+            GZIP_LEVEL: 9
         volumes:
             - mysql_backups:/backup
         deploy:
